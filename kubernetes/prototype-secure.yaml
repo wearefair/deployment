@@ -55,18 +55,23 @@ data:
     .:53 {
         errors
         health
-        kubernetes CLUSTER_DOMAIN REVERSE_CIDRS {
+        kubernetes cluster.local in-addr.arpa ip6.arpa {
           pods insecure
           upstream
           fallthrough in-addr.arpa ip6.arpa
-        }FEDERATIONS
+        }
+        kubernetai cluster.local in-addr.arpa ip6.arpa {
+          endpoint https://prototype-k8.sandbox.fair.engineering
+          namespaces default
+          kubeconfig /root/.kubeconfig prototype-general
+        }
         prometheus :9153
-        forward . UPSTREAMNAMESERVER
+        forward . /etc/resolv.conf
         cache 30
         loop
         reload
         loadbalance
-    }STUBDOMAINS
+    }
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -111,6 +116,9 @@ spec:
         - name: config-volume
           mountPath: /etc/coredns
           readOnly: true
+        - name: secret-volume
+          mountPath: /root/
+          readOnly: true
         ports:
         - containerPort: 53
           name: dns
@@ -151,6 +159,12 @@ spec:
             items:
             - key: Corefile
               path: Corefile
+        - name: secret-volume
+          secret:
+            secretName: prototype-general-coredns
+            items:
+            - key: prototype-general-kubeconfig
+              path: .kubeconfig
 ---
 apiVersion: v1
 kind: Service
@@ -167,7 +181,7 @@ metadata:
 spec:
   selector:
     k8s-app: kube-dns
-  clusterIP: CLUSTER_DNS_IP
+  clusterIP: 100.65.0.10
   ports:
   - name: dns
     port: 53

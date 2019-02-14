@@ -2,7 +2,8 @@
 
 # Deploys CoreDNS to a cluster currently running Kube-DNS.
 
-set -eo pipefail
+# set -eo pipefail
+set +e
 
 show_help () {
 cat << USAGE
@@ -131,4 +132,4 @@ sed -e "s/CLUSTER_DNS_IP/$CLUSTER_DNS_IP/g" \
     -e "s@STUBDOMAINS@${STUBDOMAINS//$orig/$replace}@g" \
     -e "s@FEDERATIONS@${FEDERATIONS//$orig/$replace}@g" \
     -e "s/UPSTREAMNAMESERVER/$UPSTREAM/g" \
-    "${YAML_TEMPLATE}"
+    "${YAML_TEMPLATE}" > rendered.yaml
